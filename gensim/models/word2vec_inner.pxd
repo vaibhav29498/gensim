@@ -61,6 +61,7 @@ cdef struct Word2VecConfig:
     np.uint32_t indexes[MAX_SENTENCE_LEN]
     np.uint32_t reduced_windows[MAX_SENTENCE_LEN]
     int sentence_idx[MAX_SENTENCE_LEN + 1]
+    np.uint32_t *update_count
 
     # For hierarchical softmax
     REAL_t *syn1
