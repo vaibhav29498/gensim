@@ -593,7 +593,7 @@ class Word2Vec(BaseWordEmbeddingsModel):
             max_vocab_size=max_vocab_size, min_count=min_count, sample=sample, sorted_vocab=bool(sorted_vocab),
             null_word=null_word, max_final_vocab=max_final_vocab, ns_exponent=ns_exponent)
         self.trainables = Word2VecTrainables(seed=seed, vector_size=size, hashfxn=hashfxn)
-
+        
         super(Word2Vec, self).__init__(
             sentences=sentences, corpus_file=corpus_file, workers=workers, vector_size=size, epochs=iter,
             callbacks=callbacks, batch_words=batch_words, trim_rule=trim_rule, sg=sg, alpha=alpha, window=window,
@@ -1359,6 +1359,7 @@ class Word2VecVocab(utils.SaveLoad):
         self.sorted_vocab = sorted_vocab
         self.null_word = null_word
         self.cum_table = None  # for negative sampling
+        self.update_count = None
         self.raw_vocab = None
         self.max_final_vocab = max_final_vocab
         self.ns_exponent = ns_exponent
@@ -1572,7 +1573,9 @@ class Word2VecVocab(utils.SaveLoad):
         if negative:
             # build the table for drawing random words (for negative sampling)
             self.make_cum_table(wv)
-
+        
+        self.update_count = zeros(len(wv.index2word), dtype=uint32)
+        
         return report_values
 
     def add_null_word(self, wv):
