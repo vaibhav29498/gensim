@@ -104,7 +104,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks,
-    const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+    const int _compute_loss, REAL_t *_running_training_loss_param, np.uint32_t *update_count) nogil
 
 
 cdef void w2v_fast_sentence_cbow_hs(
