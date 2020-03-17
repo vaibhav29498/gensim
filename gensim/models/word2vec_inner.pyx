@@ -161,7 +161,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *word_locks,
-    const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    const int _compute_loss, REAL_t *_running_training_loss_param, np.uint32_t *update_count) nogil:
     """Train on a single effective word from the current batch, using the Skip-Gram model.
 
     In this model we are using a given word to predict a context word (a word that is
@@ -243,6 +243,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
 
     our_saxpy(&size, &word_locks[word2_index], work, &ONE, &syn0[row1], &ONE)
+    update_count[word2_index] += 1
 
     return next_random
 
@@ -479,7 +480,8 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
     c[0].word_locks = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_lockf))
     c[0].alpha = alpha
     c[0].size = model.wv.vector_size
-
+    c[0].update_count = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.update_count))
+    
     if c[0].hs:
         c[0].syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
 
@@ -582,7 +584,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
                     if c.hs:
                         w2v_fast_sentence_sg_hs(c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j], c.alpha, c.work, c.word_locks, c.compute_loss, &c.running_training_loss)
                     if c.negative:
-                        c.next_random = w2v_fast_sentence_sg_neg(c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size, c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
+                        c.next_random = w2v_fast_sentence_sg_neg(c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size, c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss, c.update_count)
 
     model.running_training_loss = c.running_training_loss
     return effective_words
